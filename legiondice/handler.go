@@ -17,7 +17,7 @@ type Result struct {
 	Rolls     []Roll
 }
 
-func Test(attack Attack, defense Defense, rolls int, logs int) Result {
+func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 	// seed random generator
 	rand.Seed(time.Now().Unix())
 
@@ -85,7 +85,7 @@ func RollDice(response http.ResponseWriter, request *http.Request) {
 
 	attack := AttackFromRequest(request)
 	defense := DefenseFromRequest(request)
-	result := Test(attack, defense, 10000, 25)
+	result := Test(&attack, &defense, 10000, 25)
 
 	json.NewEncoder(response).Encode(result)
 }

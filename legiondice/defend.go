@@ -28,20 +28,21 @@ type DefenseConfig struct {
 	rollsRedDefense   bool
 	rollsWhiteDefense bool
 	surgesToBlock     bool
+	cover             int
 	keywords          DefenseKeywords
+	tokens            DefenseTokens
 }
 
 type DefenseKeywords struct {
 	armor        bool
-	armorX       int
-	cover        int
-	dodge        int
 	impervious   bool
+	armorX       int
+	coverX       int
 	uncannyLuckX int
 }
 
 type DefenseTokens struct {
-	dodge        int
+	dodge int
 }
 
 func redDefenseDice() string {
@@ -79,7 +80,7 @@ func DefenseRoll(redDice, whiteDice int) DefenseResult {
 	}
 }
 
-func CalculateBlocks(result DefenseResult, defense Defense) int {
+func CalculateBlocks(result *DefenseResult, defense *Defense) int {
 	val := result.Red.B + result.White.B
 	if defense.config.surgesToBlock {
 		val += result.Red.S + result.White.S
@@ -87,7 +88,7 @@ func CalculateBlocks(result DefenseResult, defense Defense) int {
 	return val
 }
 
-func DefenseRoleResult(defense Defense) (int, DefenseResult) {
+func DefenseRoleResult(defense *Defense) (int, DefenseResult) {
 	redDice := 0
 	whiteDice := 0
 	if defense.config.rollsRedDefense {
@@ -97,10 +98,10 @@ func DefenseRoleResult(defense Defense) (int, DefenseResult) {
 	}
 
 	result := DefenseRoll(redDice, whiteDice)
-	return CalculateBlocks(result, defense), result
+	return CalculateBlocks(&result, defense), result
 }
 
-func DefenseTest(defense Defense, rolls int) float64 {
+func DefenseTest(defense *Defense, rolls int) float64 {
 	sum := 0
 	for i := 0; i < rolls; i++ {
 		blocks, _ := DefenseRoleResult(defense)
