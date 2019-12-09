@@ -32,6 +32,7 @@ type Attack struct {
 type AttackConfig struct {
 	surgesToHits  bool
 	surgesToCrits bool
+	tokens        AttackTokens
 	keywords      AttackKeywords
 }
 
@@ -39,8 +40,11 @@ type AttackKeywords struct {
 	pierceX  int
 	impactX  int
 	ramX     int
-	aim      bool
 	preciseX int
+}
+
+type AttackTokens struct {
+	aim int
 }
 
 func redAttackDice() string {
@@ -91,14 +95,6 @@ func AttackRoll(redDice, blackDice, whiteDice int) AttackResult {
 			N: strings.Count(strings.Join(whiteDiceValues[:], ""), "N"),
 		},
 	}
-}
-
-func CalculateHits(result AttackResult, attack Attack, defense Defense) int {
-	val := result.Red.H + result.Red.C + result.Black.H + result.Black.C + result.White.H + result.White.C
-	if attack.config.surgesToCrits || attack.config.surgesToHits {
-		val += result.Red.S + result.Black.S + result.White.S
-	}
-	return val
 }
 
 func AttackRollResult(attack Attack, defense Defense) (int, AttackResult) {

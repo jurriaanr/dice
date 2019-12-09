@@ -29,6 +29,10 @@ func CreateAttack(
 	return attack
 }
 
+func AddAimToAttack(aim int, attack *Attack) {
+	attack.config.tokens.aim = aim
+}
+
 func CreateDefense(defenseDice string, surges bool) Defense {
 	// setup Defense pool
 	defense := Defense{}
@@ -53,12 +57,20 @@ func AttackFromRequest(request *http.Request) Attack {
 	// attack surges conversion (crits, hits, none)
 	as := request.URL.Query().Get("as")
 
-	return CreateAttack(
+	aim, _ := strconv.ParseInt(request.URL.Query().Get("aim"), 10, 64)
+
+	attack := CreateAttack(
 		int(r),
 		int(b),
 		int(w),
 		as,
 	)
+
+	if aim > 0 {
+		AddAimToAttack(int(aim), &attack)
+	}
+
+	return attack
 }
 
 func DefenseFromRequest(request *http.Request) Defense {

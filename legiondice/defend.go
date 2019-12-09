@@ -40,6 +40,10 @@ type DefenseKeywords struct {
 	uncannyLuckX int
 }
 
+type DefenseTokens struct {
+	dodge        int
+}
+
 func redDefenseDice() string {
 	return redDefenseValues[rand.Intn(len(redDefenseValues))]
 }

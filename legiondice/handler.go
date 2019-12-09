@@ -53,13 +53,14 @@ func Test(attack Attack, defense Defense, rolls int, logs int) Result {
 	}
 }
 
-
 func RollDice(response http.ResponseWriter, request *http.Request) {
-	allowedOrigins := [4]string{
+	allowedOrigins := [6]string{
 		"http://legion.localhost",
 		"http://legion.localhost.charlesproxy.com",
-		"http://swlegion.space",
-		"https://swlegion.space",
+		"http://legion.localhost:81",
+		"http://legion.localhost.charlesproxy.com:81",
+		"http://www.swlegion.space",
+		"https://www.swlegion.space",
 	}
 
 	origin := request.Header.Get("origin")
