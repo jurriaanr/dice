@@ -7,16 +7,22 @@ import (
 
 func main() {
 	attack := dice.CreateAttack(
-		5,
+		3,
 		0,
 		0,
-		"crits",
+		"none",
 	)
 
-	//dice.AddAimToAttack(1, &attack)
+	//dice.AddAimToAttack(2, &attack)
+	//dice.AddPreciseXToAttack(1, &attack)
 
-	defense := dice.CreateDefense("red", true)
-	result := dice.Test(attack, defense, 5, 10)
+	defense := dice.CreateDefense("white", false, 0)
+
+	//dice.AddDodgeToDefense(1, &defense)
+	//dice.AddCoverXToDefense(1, &defense)
+	//dice.AddPierceXToAttack(1, &attack)
+
+	result := dice.Test(&attack, &defense, 100000, 10)
 
 	fmt.Printf("This attack would result in %f hits", result.Successes)
 }

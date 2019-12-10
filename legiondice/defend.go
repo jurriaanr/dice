@@ -20,7 +20,6 @@ type DefenseResult struct {
 }
 
 type Defense struct {
-	dice   int
 	config DefenseConfig
 }
 
@@ -80,32 +79,24 @@ func DefenseRoll(redDice, whiteDice int) DefenseResult {
 	}
 }
 
-func CalculateBlocks(result *DefenseResult, defense *Defense) int {
-	val := result.Red.B + result.White.B
-	if defense.config.surgesToBlock {
-		val += result.Red.S + result.White.S
-	}
-	return val
-}
-
-func DefenseRoleResult(defense *Defense) (int, DefenseResult) {
+func DefenseRoleResult(hits int, attack *Attack, defense *Defense) (int, DefenseResult) {
 	redDice := 0
 	whiteDice := 0
+
 	if defense.config.rollsRedDefense {
-		redDice = defense.dice
+		redDice = hits
 	} else {
-		whiteDice = defense.dice
+		whiteDice = hits
 	}
 
+	// 7a Roll Dice
+	//  For each hit and critical result on the attacker’s dice, the defender rolls one defense die whose
+	// color matches the defender’s defense, which is presented on the defender’s unit card.
 	result := DefenseRoll(redDice, whiteDice)
-	return CalculateBlocks(&result, defense), result
-}
 
-func DefenseTest(defense *Defense, rolls int) float64 {
-	sum := 0
-	for i := 0; i < rolls; i++ {
-		blocks, _ := DefenseRoleResult(defense)
-		sum += blocks
-	}
-	return float64(sum) / float64(rolls)
+	// 7b Reroll Dice
+	// The defender can resolve any abilities that allow the defender to reroll defense dice.
+	// ...
+
+	return CalculateBlocks(&result, attack, defense), result
 }

@@ -27,17 +27,18 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 	// collect total number of hits
 	sum := 0
 	for i := 0; i < rolls; i++ {
-		// perform Attack roll
+		// 4 Roll Attack Dice (includes step 4a, 4b, 4c, 5 and 6)
+		// The attacker rolls the dice in the attack pool
 		hits, attackResult := AttackRollResult(attack, defense)
 
-		// set number of Defense dice based on number of hits
-		defense.dice = hits
+		// 7 Roll Defense Dice (includes 7a, 7b, 7c and 8)
+		blocks, defenseResult := DefenseRoleResult(hits, attack, defense)
 
-		// perform Defense roll
-		blocks, defenseResult := DefenseRoleResult(defense)
+		// 9 Compare Results:
+		remainingHits := hits - blocks
 
 		// increase total with number of Successes
-		sum += hits - blocks
+		sum += remainingHits
 
 		if i < logs {
 			results[i] = Roll{
@@ -54,13 +55,15 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 }
 
 func RollDice(response http.ResponseWriter, request *http.Request) {
-	allowedOrigins := [6]string{
+	allowedOrigins := [8]string{
 		"http://legion.localhost",
 		"http://legion.localhost.charlesproxy.com",
 		"http://legion.localhost:81",
 		"http://legion.localhost.charlesproxy.com:81",
 		"http://www.swlegion.space",
 		"https://www.swlegion.space",
+		"http://swlegion.space",
+		"https://swlegion.space",
 	}
 
 	origin := request.Header.Get("origin")

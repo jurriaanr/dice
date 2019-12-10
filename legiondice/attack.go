@@ -101,12 +101,3 @@ func AttackRollResult(attack *Attack, defense *Defense) (int, AttackResult) {
 	result := AttackRoll(attack.red, attack.black, attack.white)
 	return CalculateHits(result, attack, defense), result
 }
-
-func AttackTest(attack *Attack, defense *Defense, rolls int) float64 {
-	sum := 0
-	for i := 0; i < rolls; i++ {
-		hits, _ := AttackRollResult(attack, defense)
-		sum += hits
-	}
-	return float64(sum) / float64(rolls)
-}

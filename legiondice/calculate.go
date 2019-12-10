@@ -2,6 +2,7 @@ package dice
 
 func CalculateHits(result AttackResult, attack *Attack, defense *Defense) int {
 	// 4B Reroll attack dice
+	// The attacker can resolve any abilities that allow the attacker to reroll attack dice.
 	misses := getAttackMisses(&result, attack)
 
 	if attack.config.tokens.aim > 0 && misses > 0 {
@@ -11,15 +12,38 @@ func CalculateHits(result AttackResult, attack *Attack, defense *Defense) int {
 	}
 
 	// 4C Convert attack surges
-	applySurges(&result, attack)
+	// The attacker changes its attack surge results to the result indicated on its unit card by turning the die.
+	// If no result is indicated, the attacker changes the result to a blank.
+	applyAttackSurges(&result, attack)
 
 	// 5 Apply Dodge & Cover
+	// If the defender has a dodge token for is in cover, the defender may spend dodge tokens and apply cover to
+	// cancel hit results. Dodge tokens and cover cannot be used to cancel critical results.
+	// A unit can apply cover only against ranged attacks
 	applyDodgeAndCover(&result, defense)
+
+	// 6 Modify Attack Dice
+	// The attacker can resolve any card abilities that modify the attack dice.
+	// Then, the defender can resolve any card abilities that modify the attack dice
 
 	// count hits
 	val := result.Red.H + result.Red.C + result.Black.H + result.Black.C + result.White.H + result.White.C
 
 	return val
+}
+
+func CalculateBlocks(result *DefenseResult, attack *Attack, defense *Defense) int {
+	// 7c Convert Defense Surges:
+	// The defender changes its defense surge results to the result indicated on its unit card by turning the die.
+	// If no result is indicated, the defender changes the result to a blank.
+	applyDefenseSurges(result, defense)
+
+	// 8 Modify Defense Dice
+	// The defender can resolve any card abilities that modify the defense dice.
+	// Then, the attacker can resolve any card abilities that modify the defense dice
+	applyPierce(result, attack)
+
+	return 	result.Red.B + result.White.B
 }
 
 func getAttackMisses(result *AttackResult, attack *Attack) int {
@@ -69,7 +93,7 @@ func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (r
 	return redToReroll, blackToReroll, whiteToReroll
 }
 
-func applySurges(result *AttackResult, attack *Attack) {
+func applyAttackSurges(result *AttackResult, attack *Attack) {
 	if attack.config.surgesToHits {
 		result.Red.H += result.Red.S
 		result.Black.H += result.Black.S
@@ -83,6 +107,15 @@ func applySurges(result *AttackResult, attack *Attack) {
 		result.White.C += result.White.S
 		result.Red.S = 0
 		result.Black.S = 0
+		result.White.S = 0
+	}
+}
+
+func applyDefenseSurges(result *DefenseResult, defense *Defense) {
+	if defense.config.surgesToBlock {
+		result.Red.B += result.Red.S
+		result.White.B += result.White.S
+		result.Red.S = 0
 		result.White.S = 0
 	}
 }
@@ -104,6 +137,20 @@ func applyDodgeAndCover(result *AttackResult, defense *Defense) {
 		}
 
 		hits = result.White.H + result.Black.H + result.Red.H
+	}
+}
+
+func applyPierce(result *DefenseResult, attack *Attack) {
+	for tot := attack.config.keywords.pierceX; tot > 0; {
+		if result.White.B > 0 {
+			result.White.B--
+			tot--
+		} else if result.Red.B > 0 {
+			result.Red.B--
+			tot--
+		} else {
+			break
+		}
 	}
 }
 

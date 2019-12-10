@@ -38,6 +38,10 @@ func AddPreciseXToAttack(preciseX int, attack *Attack) {
 	attack.config.keywords.preciseX = preciseX
 }
 
+func AddPierceXToAttack(pierceX int, attack *Attack) {
+	attack.config.keywords.pierceX = pierceX
+}
+
 func CreateDefense(defenseDice string, surges bool, cover int) Defense {
 	// setup Defense pool
 	defense := Defense{}
@@ -72,6 +76,7 @@ func AttackFromRequest(request *http.Request) Attack {
 
 	aim, _ := strconv.ParseInt(request.URL.Query().Get("aim"), 10, 64)
 	preciseX, _ := strconv.ParseInt(request.URL.Query().Get("preciseX"), 10, 64)
+	pierceX, _ := strconv.ParseInt(request.URL.Query().Get("pierceX"), 10, 64)
 
 	attack := CreateAttack(
 		int(r),
@@ -86,6 +91,10 @@ func AttackFromRequest(request *http.Request) Attack {
 
 	if preciseX > 0 {
 		AddPreciseXToAttack(int(preciseX), &attack)
+	}
+
+	if pierceX > 0 {
+		AddPierceXToAttack(int(pierceX), &attack)
 	}
 
 	return attack
