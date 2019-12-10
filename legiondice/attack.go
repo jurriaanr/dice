@@ -97,7 +97,8 @@ func AttackRoll(redDice, blackDice, whiteDice int) AttackResult {
 	}
 }
 
-func AttackRollResult(attack *Attack, defense *Defense) (int, AttackResult) {
-	result := AttackRoll(attack.red, attack.black, attack.white)
-	return CalculateHits(result, attack, defense), result
+func AttackRollResult(attack *Attack, defense *Defense) (hits int, result AttackResult, resultAfter AttackResult) {
+	result = AttackRoll(attack.red, attack.black, attack.white)
+	hits, resultAfter = CalculateHits(result, attack, defense)
+	return hits, result, resultAfter
 }

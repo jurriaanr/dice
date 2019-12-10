@@ -1,7 +1,7 @@
 package dice
 
-func CalculateHits(result AttackResult, attack *Attack, defense *Defense) int {
-	// 4B Reroll attack dice
+func CalculateHits(result AttackResult, attack *Attack, defense *Defense) (int, AttackResult) {
+	// 4B Reroll Dice
 	// The attacker can resolve any abilities that allow the attacker to reroll attack dice.
 	misses := getAttackMisses(&result, attack)
 
@@ -29,21 +29,21 @@ func CalculateHits(result AttackResult, attack *Attack, defense *Defense) int {
 	// count hits
 	val := result.Red.H + result.Red.C + result.Black.H + result.Black.C + result.White.H + result.White.C
 
-	return val
+	return val, result
 }
 
-func CalculateBlocks(result *DefenseResult, attack *Attack, defense *Defense) int {
+func CalculateBlocks(result DefenseResult, attack *Attack, defense *Defense) (int, DefenseResult) {
 	// 7c Convert Defense Surges:
 	// The defender changes its defense surge results to the result indicated on its unit card by turning the die.
 	// If no result is indicated, the defender changes the result to a blank.
-	applyDefenseSurges(result, defense)
+	applyDefenseSurges(&result, defense)
 
 	// 8 Modify Defense Dice
 	// The defender can resolve any card abilities that modify the defense dice.
 	// Then, the attacker can resolve any card abilities that modify the defense dice
-	applyPierce(result, attack)
+	applyPierce(&result, attack)
 
-	return 	result.Red.B + result.White.B
+	return 	result.Red.B + result.White.B, result
 }
 
 func getAttackMisses(result *AttackResult, attack *Attack) int {
@@ -93,6 +93,9 @@ func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (r
 	return redToReroll, blackToReroll, whiteToReroll
 }
 
+// 4C Convert attack surges
+// The attacker changes its attack surge results to the result indicated on its unit card by turning the die.
+// If no result is indicated, the attacker changes the result to a blank.
 func applyAttackSurges(result *AttackResult, attack *Attack) {
 	if attack.config.surgesToHits {
 		result.Red.H += result.Red.S
@@ -108,13 +111,28 @@ func applyAttackSurges(result *AttackResult, attack *Attack) {
 		result.Red.S = 0
 		result.Black.S = 0
 		result.White.S = 0
+	} else {
+		result.Red.N += result.Red.S
+		result.Black.N += result.Black.S
+		result.White.N += result.White.S
+		result.Red.S = 0
+		result.Black.S = 0
+		result.White.S = 0
 	}
 }
 
+// 7c Convert Defense Surges:
+// The defender changes its defense surge results to the result indicated on its unit card by turning the die.
+// If no result is indicated, the defender changes the result to a blank.
 func applyDefenseSurges(result *DefenseResult, defense *Defense) {
 	if defense.config.surgesToBlock {
 		result.Red.B += result.Red.S
 		result.White.B += result.White.S
+		result.Red.S = 0
+		result.White.S = 0
+	} else {
+		result.Red.N += result.Red.S
+		result.White.N += result.White.S
 		result.Red.S = 0
 		result.White.S = 0
 	}

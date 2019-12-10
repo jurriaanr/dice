@@ -79,7 +79,7 @@ func DefenseRoll(redDice, whiteDice int) DefenseResult {
 	}
 }
 
-func DefenseRoleResult(hits int, attack *Attack, defense *Defense) (int, DefenseResult) {
+func DefenseRoleResult(hits int, attack *Attack, defense *Defense) (blocks int, result DefenseResult, resultAfter DefenseResult) {
 	redDice := 0
 	whiteDice := 0
 
@@ -92,11 +92,12 @@ func DefenseRoleResult(hits int, attack *Attack, defense *Defense) (int, Defense
 	// 7a Roll Dice
 	//  For each hit and critical result on the attacker’s dice, the defender rolls one defense die whose
 	// color matches the defender’s defense, which is presented on the defender’s unit card.
-	result := DefenseRoll(redDice, whiteDice)
+	result = DefenseRoll(redDice, whiteDice)
+	blocks, resultAfter = CalculateBlocks(result, attack, defense)
 
 	// 7b Reroll Dice
 	// The defender can resolve any abilities that allow the defender to reroll defense dice.
 	// ...
 
-	return CalculateBlocks(&result, attack, defense), result
+	return blocks, result, resultAfter
 }

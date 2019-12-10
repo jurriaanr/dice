@@ -10,6 +10,8 @@ import (
 type Roll struct {
 	Attack  AttackResult
 	Defense DefenseResult
+	AttackAfter AttackResult
+	DefenseAfter DefenseResult
 }
 
 type Result struct {
@@ -29,10 +31,10 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 	for i := 0; i < rolls; i++ {
 		// 4 Roll Attack Dice (includes step 4a, 4b, 4c, 5 and 6)
 		// The attacker rolls the dice in the attack pool
-		hits, attackResult := AttackRollResult(attack, defense)
+		hits, attackResult, attackResultAfter := AttackRollResult(attack, defense)
 
 		// 7 Roll Defense Dice (includes 7a, 7b, 7c and 8)
-		blocks, defenseResult := DefenseRoleResult(hits, attack, defense)
+		blocks, defenseResult, defenseResultAfter := DefenseRoleResult(hits, attack, defense)
 
 		// 9 Compare Results:
 		remainingHits := hits - blocks
@@ -44,6 +46,8 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 			results[i] = Roll{
 				attackResult,
 				defenseResult,
+				attackResultAfter,
+				defenseResultAfter,
 			}
 		}
 	}
@@ -88,7 +92,7 @@ func RollDice(response http.ResponseWriter, request *http.Request) {
 
 	attack := AttackFromRequest(request)
 	defense := DefenseFromRequest(request)
-	result := Test(&attack, &defense, 10000, 25)
+	result := Test(&attack, &defense, 100000, 25)
 
 	json.NewEncoder(response).Encode(result)
 }
