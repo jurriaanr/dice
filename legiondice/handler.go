@@ -8,10 +8,11 @@ import (
 )
 
 type Roll struct {
-	Attack  AttackResult
-	Defense DefenseResult
-	AttackAfter AttackResult
+	Attack       AttackResult
+	Defense      DefenseResult
+	AttackAfter  AttackResult
 	DefenseAfter DefenseResult
+	Hits         int
 }
 
 type Result struct {
@@ -48,6 +49,7 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 				defenseResult,
 				attackResultAfter,
 				defenseResultAfter,
+				remainingHits,
 			}
 		}
 	}
