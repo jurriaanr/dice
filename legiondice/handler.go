@@ -8,16 +8,16 @@ import (
 )
 
 type Roll struct {
-	Attack       AttackResult
-	Defense      DefenseResult
-	AttackAfter  AttackResult
-	DefenseAfter DefenseResult
+	Attack       *AttackResult
+	Defense      *DefenseResult
+	AttackAfter  *AttackResult
+	DefenseAfter *DefenseResult
 	Hits         int
 }
 
 type Result struct {
 	Successes float64
-	Rolls     []Roll
+	Rolls     *[]Roll
 }
 
 func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
@@ -45,10 +45,10 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 
 		if i < logs {
 			results[i] = Roll{
-				attackResult,
-				defenseResult,
-				attackResultAfter,
-				defenseResultAfter,
+				&attackResult,
+				&defenseResult,
+				&attackResultAfter,
+				&defenseResultAfter,
 				remainingHits,
 			}
 		}
@@ -56,7 +56,7 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 
 	return Result{
 		float64(sum) / float64(rolls),
-		results,
+		&results,
 	}
 }
 
