@@ -85,7 +85,7 @@ func RollDice(response http.ResponseWriter, request *http.Request) {
 
 	attack := AttackFromRequest(request)
 	defense := DefenseFromRequest(request)
-	result := Test(&attack, &defense, 10000, 25)
+	result := Test(&attack, &defense, 100000, 25)
 
 	json.NewEncoder(response).Encode(result)
 }
