@@ -248,6 +248,18 @@ func applyRamX(result *AttackResult, attack *Attack) {
 			result.Red.S--
 			result.Red.C++
 			tot--
+		} else if result.White.H > 0 {
+			result.White.H--
+			result.White.C++
+			tot--
+		} else if result.Black.H > 0 {
+			result.Black.H--
+			result.Black.C++
+			tot--
+		} else if result.Red.H > 0 {
+			result.Red.H--
+			result.Red.C++
+			tot--
 		} else {
 			break
 		}
