@@ -7,3 +7,7 @@ To deploy the function exec (after installing gcloud tools: https://cloud.google
 To test locally exec
 
     go run legion/test
+
+To update gcloud
+
+    gcloud components update
