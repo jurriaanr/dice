@@ -25,6 +25,7 @@ func CalculateHits(result AttackResult, attack *Attack, defense *Defense) (int, 
 	// 6 Modify Attack Dice
 	// The attacker can resolve any card abilities that modify the attack dice.
 	// Then, the defender can resolve any card abilities that modify the attack dice
+	applyRamX(&result, attack)
 
 	// count hits
 	val := result.Red.H + result.Red.C + result.Black.H + result.Black.C + result.White.H + result.White.C
