@@ -59,7 +59,16 @@ func getAttackMisses(result *AttackResult, attack *Attack) int {
 func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (red int, black int, white int) {
 	// we can only reroll up to the number of aimtokens we have. So either all the misses, or the max allowed rerolls
 	count := min(misses, attack.config.tokens.aim*(2+attack.config.keywords.preciseX))
+
 	convertsSurges := attack.config.surgesToHits || attack.config.surgesToCrits
+
+	// first we will temporarily remove surges that would be converted by other keywords like criticalX
+	// But only if surges are not converted in general, other wise we do not care at this point
+	whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks := 0, 0, 0, 0, 0 ,0
+
+	if !convertsSurges {
+		whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks = saveDiceBeforeReroll(result, attack)
+	}
 
 	redToReroll := 0
 	blackToReroll := 0
@@ -90,13 +99,73 @@ func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (r
 		tot = redToReroll + blackToReroll + whiteToReroll
 	}
 
+	// add back the savedSurges
+	if !convertsSurges {
+		result.White.S += whiteSurges
+		result.White.N += whiteBlanks
+		result.Black.S += blackSurges
+		result.Black.N += blackBlanks
+		result.Red.S += redSurges
+		result.Red.N += redBlanks
+	}
+
 	return redToReroll, blackToReroll, whiteToReroll
+}
+
+func saveDiceBeforeReroll(result *AttackResult, attack *Attack) (whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks int) {
+	numberOfSurgesToSave := attack.config.keywords.criticalX
+	numberOfBlanksToSave := attack.config.keywords.ramX
+
+	whiteSurges = 0
+	blackSurges = 0
+	redSurges = 0
+	whiteBlanks = 0
+	blackBlanks = 0
+	redBlanks = 0
+
+	for numberOfSurgesToSave > 0 {
+		// makes sense to keep the white surges first do better dice can be used for rerolls
+		if result.White.S > 0 {
+			numberOfSurgesToSave--
+			whiteSurges++
+		} else if result.Black.S > 0 {
+			numberOfSurgesToSave--
+			blackSurges++
+		} else if result.Red.S > 0 {
+			numberOfSurgesToSave--
+			redSurges++
+		} else {
+			break
+		}
+	}
+
+	for numberOfBlanksToSave > 0 {
+		// makes sense to keep the white surges first do better dice can be used for rerolls
+		if result.White.N > 0 {
+			numberOfBlanksToSave--
+			whiteBlanks++
+		} else if result.Black.N > 0 {
+			numberOfBlanksToSave--
+			blackBlanks++
+		} else if result.Red.N > 0 {
+			numberOfBlanksToSave--
+			redBlanks++
+		} else {
+			break
+		}
+	}
+
+	return whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks
 }
 
 // 4C Convert attack surges
 // The attacker changes its attack surge results to the result indicated on its unit card by turning the die.
 // If no result is indicated, the attacker changes the result to a blank.
 func applyAttackSurges(result *AttackResult, attack *Attack) {
+	// first we apply critical X converting surges to crits
+	applyCriticalX(result, attack)
+
+	// now handle remaining surges
 	if attack.config.surgesToHits {
 		result.Red.H += result.Red.S
 		result.Black.H += result.Black.S
@@ -119,6 +188,32 @@ func applyAttackSurges(result *AttackResult, attack *Attack) {
 		result.Black.S = 0
 		result.White.S = 0
 	}
+}
+
+// While converting offensive surges, change up to X Dice surge results to Crit results
+func applyCriticalX(result *AttackResult, attack *Attack) {
+	for tot := attack.config.keywords.criticalX; tot > 0; {
+		if result.Red.S > 0 {
+			result.Red.C++
+			result.Red.S--
+			tot--
+		} else if result.Black.S > 0 {
+			result.Black.S--
+			result.Black.C++
+			tot--
+		} else if result.White.S > 0 {
+			result.White.S--
+			result.White.C++
+			tot--
+		} else {
+			break
+		}
+	}
+}
+
+
+func applyRamX(result *AttackResult, attack *Attack) {
+
 }
 
 // 7c Convert Defense Surges:

@@ -37,10 +37,11 @@ type AttackConfig struct {
 }
 
 type AttackKeywords struct {
-	pierceX  int
-	impactX  int
-	ramX     int
-	preciseX int
+	pierceX   int
+	impactX   int
+	ramX      int
+	preciseX  int
+	criticalX int
 }
 
 type AttackTokens struct {
