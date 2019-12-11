@@ -114,7 +114,7 @@ func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (r
 
 func saveDiceBeforeReroll(result *AttackResult, attack *Attack) (whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks int) {
 	numberOfSurgesToSave := attack.config.keywords.criticalX
-	numberOfBlanksToSave := attack.config.keywords.ramX
+	numberOfSurgesOrBlanksToSave := attack.config.keywords.ramX
 
 	whiteSurges = 0
 	blackSurges = 0
@@ -139,17 +139,26 @@ func saveDiceBeforeReroll(result *AttackResult, attack *Attack) (whiteSurges, bl
 		}
 	}
 
-	for numberOfBlanksToSave > 0 {
+	for numberOfSurgesOrBlanksToSave > 0 {
 		// makes sense to keep the white surges first do better dice can be used for rerolls
 		if result.White.N > 0 {
-			numberOfBlanksToSave--
+			numberOfSurgesOrBlanksToSave--
 			whiteBlanks++
 		} else if result.Black.N > 0 {
-			numberOfBlanksToSave--
+			numberOfSurgesOrBlanksToSave--
 			blackBlanks++
 		} else if result.Red.N > 0 {
-			numberOfBlanksToSave--
+			numberOfSurgesOrBlanksToSave--
 			redBlanks++
+		} else if result.White.S > 0 && !attack.config.surgesToCrits {
+			numberOfSurgesOrBlanksToSave--
+			whiteSurges++
+		} else if result.Black.S > 0 && !attack.config.surgesToCrits {
+			numberOfSurgesOrBlanksToSave--
+			blackSurges++
+		} else if result.Red.S > 0 && !attack.config.surgesToCrits {
+			numberOfSurgesOrBlanksToSave--
+			redSurges++
 		} else {
 			break
 		}
@@ -190,7 +199,7 @@ func applyAttackSurges(result *AttackResult, attack *Attack) {
 	}
 }
 
-// While converting offensive surges, change up to X Dice surge results to Crit results
+// while converting offensive surges, change up to X Dice surge results to crit results
 func applyCriticalX(result *AttackResult, attack *Attack) {
 	for tot := attack.config.keywords.criticalX; tot > 0; {
 		if result.Red.S > 0 {
@@ -211,9 +220,37 @@ func applyCriticalX(result *AttackResult, attack *Attack) {
 	}
 }
 
-
+// you may turn 1 attack die to a crit result
 func applyRamX(result *AttackResult, attack *Attack) {
-
+	for tot := attack.config.keywords.ramX; tot > 0; {
+		if result.White.N > 0 {
+			result.White.N--
+			result.White.C++
+			tot--
+		} else if result.Black.N > 0 {
+			result.Black.N--
+			result.Black.C++
+			tot--
+		} else if result.Red.N > 0 {
+			result.Red.N--
+			result.Red.C++
+			tot--
+		} else if result.White.S > 0 {
+			result.White.S--
+			result.White.C++
+			tot--
+		} else if result.Black.S > 0 {
+			result.Black.S--
+			result.Black.C++
+			tot--
+		} else if result.Red.S > 0 {
+			result.Red.S--
+			result.Red.C++
+			tot--
+		} else {
+			break
+		}
+	}
 }
 
 // 7c Convert Defense Surges:
@@ -253,6 +290,7 @@ func applyDodgeAndCover(result *AttackResult, defense *Defense) {
 	}
 }
 
+// when attacking, ignore up to X block results
 func applyPierce(result *DefenseResult, attack *Attack) {
 	for tot := attack.config.keywords.pierceX; tot > 0; {
 		if result.White.B > 0 {

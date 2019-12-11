@@ -42,6 +42,14 @@ func AddPierceXToAttack(pierceX int, attack *Attack) {
 	attack.config.keywords.pierceX = pierceX
 }
 
+func AddCriticalXToAttack(criticalX int, attack *Attack) {
+	attack.config.keywords.criticalX = criticalX
+}
+
+func AddRamXToAttack(ramX int, attack *Attack) {
+	attack.config.keywords.ramX = ramX
+}
+
 func CreateDefense(defenseDice string, surges bool, cover int) Defense {
 	// setup Defense pool
 	defense := Defense{}
@@ -68,15 +76,11 @@ func AddCoverXToDefense(coverX int, defense *Defense) {
 
 func AttackFromRequest(request *http.Request) Attack {
 	// attack dice
-	r, _ := strconv.ParseInt(request.URL.Query().Get("r"), 10, 64)
-	b, _ := strconv.ParseInt(request.URL.Query().Get("b"), 10, 64)
-	w, _ := strconv.ParseInt(request.URL.Query().Get("w"), 10, 64)
+	r := paramToInt("r", request)
+	b := paramToInt("b", request)
+	w := paramToInt("w", request)
 	// attack surges conversion (crits, hits, none)
 	as := request.URL.Query().Get("as")
-
-	aim, _ := strconv.ParseInt(request.URL.Query().Get("aim"), 10, 64)
-	preciseX, _ := strconv.ParseInt(request.URL.Query().Get("preciseX"), 10, 64)
-	pierceX, _ := strconv.ParseInt(request.URL.Query().Get("pierceX"), 10, 64)
 
 	attack := CreateAttack(
 		int(r),
@@ -85,17 +89,17 @@ func AttackFromRequest(request *http.Request) Attack {
 		as,
 	)
 
-	if aim > 0 {
-		AddAimToAttack(int(aim), &attack)
-	}
+	aim := paramToInt("aim", request)
+	preciseX := paramToInt("preciseX", request)
+	pierceX := paramToInt("pierceX", request)
+	criticalX := paramToInt("criticalX", request)
+	ramX := paramToInt("ramX", request)
 
-	if preciseX > 0 {
-		AddPreciseXToAttack(int(preciseX), &attack)
-	}
-
-	if pierceX > 0 {
-		AddPierceXToAttack(int(pierceX), &attack)
-	}
+	AddAimToAttack(aim, &attack)
+	AddPreciseXToAttack(preciseX, &attack)
+	AddPierceXToAttack(pierceX, &attack)
+	AddCriticalXToAttack(criticalX, &attack)
+	AddRamXToAttack(ramX, &attack)
 
 	return attack
 }
@@ -105,21 +109,16 @@ func DefenseFromRequest(request *http.Request) Defense {
 	d := request.URL.Query().Get("d")
 
 	// defense surges conversion (true/false)
-	ds := stringToBoolean(request.URL.Query().Get("ds"))
-	cover, _ := strconv.ParseInt(request.URL.Query().Get("cover"), 10, 64)
+	ds := paramToBoolean("ds", request)
+	cover := paramToInt("cover", request)
 
-	defense := CreateDefense(d, ds, int(cover))
+	defense := CreateDefense(d, ds, cover)
 
-	dodge, _ := strconv.ParseInt(request.URL.Query().Get("dodge"), 10, 64)
-	coverX, _ := strconv.ParseInt(request.URL.Query().Get("coverX"), 10, 64)
+	dodge := paramToInt("dodge", request)
+	coverX := paramToInt("coverX", request)
 
-	if dodge > 0 {
-		AddDodgeToDefense(int(dodge), &defense)
-	}
-
-	if coverX > 0 {
-		AddCoverXToDefense(int(coverX), &defense)
-	}
+	AddDodgeToDefense(dodge, &defense)
+	AddCoverXToDefense(coverX, &defense)
 
 	return defense
 }
@@ -139,4 +138,17 @@ func stringToBoolean(text string) bool {
 	}
 
 	return false
+}
+
+func stringToInt(text string) int {
+	val, _ := strconv.ParseInt(text, 10, 64)
+	return int(val)
+}
+
+func paramToBoolean(key string, request *http.Request) bool {
+	return stringToBoolean(request.URL.Query().Get(key))
+}
+
+func paramToInt(key string, request *http.Request) int {
+	return stringToInt(request.URL.Query().Get(key))
 }
