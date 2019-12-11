@@ -21,6 +21,8 @@ func main() {
 	//dice.AddDodgeToDefense(1, &defense)
 	//dice.AddCoverXToDefense(1, &defense)
 	//dice.AddPierceXToAttack(1, &attack)
+	//dice.AddCriticalXToAttack(1, &attack)
+	//dice.AddRamXToAttack(1, &attack)
 
 	result := dice.Test(&attack, &defense, 100000, 10)
 
