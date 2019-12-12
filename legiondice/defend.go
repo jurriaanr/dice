@@ -35,6 +35,7 @@ type DefenseConfig struct {
 type DefenseKeywords struct {
 	armor        bool
 	impervious   bool
+	lowProfile   bool
 	armorX       int
 	coverX       int
 	uncannyLuckX int
@@ -82,6 +83,8 @@ func DefenseRoll(redDice, whiteDice int) DefenseResult {
 func DefenseRoleResult(hits int, attack *Attack, defense *Defense) (blocks int, result DefenseResult, resultAfter DefenseResult) {
 	redDice := 0
 	whiteDice := 0
+
+	hits = addImperviousToDefense(hits, attack, defense)
 
 	if defense.config.rollsRedDefense {
 		redDice = hits

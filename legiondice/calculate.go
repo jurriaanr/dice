@@ -20,12 +20,16 @@ func CalculateHits(result AttackResult, attack *Attack, defense *Defense) (int, 
 	// If the defender has a dodge token for is in cover, the defender may spend dodge tokens and apply cover to
 	// cancel hit results. Dodge tokens and cover cannot be used to cancel critical results.
 	// A unit can apply cover only against ranged attacks
-	applyDodgeAndCover(&result, defense)
+	applyDodgeAndCover(&result, attack, defense)
 
 	// 6 Modify Attack Dice
 	// The attacker can resolve any card abilities that modify the attack dice.
 	// Then, the defender can resolve any card abilities that modify the attack dice
+	// attack
+	applyImpactX(&result, attack, defense)
 	applyRamX(&result, attack)
+	// defense
+	applyArmor(&result, defense)
 
 	// count hits
 	val := result.Red.H + result.Red.C + result.Black.H + result.Black.C + result.White.H + result.White.C
@@ -221,6 +225,29 @@ func applyCriticalX(result *AttackResult, attack *Attack) {
 	}
 }
 
+// While attacking a unit that has Armor, change up to X hit results to crits
+func applyImpactX(result *AttackResult, attack *Attack, defense *Defense) {
+	if defense.config.keywords.armor || defense.config.keywords.armorX > 0 {
+		for tot := attack.config.keywords.impactX; tot > 0; {
+			if result.White.H > 0 {
+				result.White.H--
+				result.White.C++
+				tot--
+			} else if result.Black.H > 0 {
+				result.Black.H--
+				result.Black.C++
+				tot--
+			} else if result.Red.H > 0 {
+				result.Red.H--
+				result.Red.C++
+				tot--
+			} else {
+				break
+			}
+		}
+	}
+}
+
 // you may turn 1 attack die to a crit result
 func applyRamX(result *AttackResult, attack *Attack) {
 	for tot := attack.config.keywords.ramX; tot > 0; {
@@ -266,6 +293,30 @@ func applyRamX(result *AttackResult, attack *Attack) {
 	}
 }
 
+// While defending, cancel (X/all) hit results
+func applyArmor(result *AttackResult, defense *Defense) {
+	if defense.config.keywords.armor {
+		result.Red.H = 0
+		result.Black.H = 0
+		result.White.H = 0
+	} else if defense.config.keywords.armorX > 0 {
+		for tot := defense.config.keywords.armorX; tot > 0; {
+			if result.White.H > 0 {
+				result.White.H--
+				tot--
+			} else if result.Black.H > 0 {
+				result.Black.H--
+				tot--
+			} else if result.Red.H > 0 {
+				result.Red.H--
+				tot--
+			} else {
+				break
+			}
+		}
+	}
+}
+
 // 7c Convert Defense Surges:
 // The defender changes its defense surge results to the result indicated on its unit card by turning the die.
 // If no result is indicated, the defender changes the result to a blank.
@@ -283,9 +334,23 @@ func applyDefenseSurges(result *DefenseResult, defense *Defense) {
 	}
 }
 
-func applyDodgeAndCover(result *AttackResult, defense *Defense) {
-	hitsToRemove := min(defense.config.cover+defense.config.keywords.coverX, 2)
-	hitsToRemove += defense.config.tokens.dodge
+func applyDodgeAndCover(result *AttackResult, attack *Attack, defense *Defense) {
+	cover := 0
+
+	if !attack.config.keywords.blast {
+		cover += defense.config.cover
+		if cover == 1 && defense.config.keywords.lowProfile {
+			cover = 2
+		}
+
+		cover += cover+defense.config.keywords.coverX
+	}
+
+	hitsToRemove := min(cover, 2)
+
+	if !attack.config.keywords.highVelocity {
+		hitsToRemove += defense.config.tokens.dodge
+	}
 
 	for hits := result.White.H + result.Black.H + result.Red.H; hitsToRemove > 0 && hits > 0; {
 		if result.White.H > 0 {
@@ -316,6 +381,14 @@ func applyPierce(result *DefenseResult, attack *Attack) {
 			break
 		}
 	}
+}
+
+// While defending, if the attack pool has Pierce X, roll x additional dice
+func addImperviousToDefense(dice int, attack *Attack, defense *Defense) int {
+	if defense.config.keywords.impervious && attack.config.keywords.pierceX > 0 {
+		dice += attack.config.keywords.pierceX
+	}
+	return dice
 }
 
 func combineAttackResults(a *AttackResult, b *AttackResult) {

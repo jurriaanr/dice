@@ -23,6 +23,7 @@ func main() {
 	//dice.AddPierceXToAttack(1, &attack)
 	//dice.AddCriticalXToAttack(1, &attack)
 	//dice.AddRamXToAttack(1, &attack)
+	//dice.AddImpactXToAttack(1, &attack)
 
 	result := dice.Test(&attack, &defense, 100000, 10)
 
