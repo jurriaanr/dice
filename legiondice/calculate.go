@@ -38,6 +38,17 @@ func CalculateHits(result AttackResult, attack *Attack, defense *Defense) (int, 
 }
 
 func CalculateBlocks(result DefenseResult, attack *Attack, defense *Defense) (int, DefenseResult) {
+	// 7b Reroll Dice
+	// The defender can resolve any abilities that allow the defender to reroll defense dice.
+	misses := getDefenseMisses(&result, defense)
+
+	// While defending, you may reroll up to X defense dice
+	if defense.config.keywords.uncannyLuckX > 0 && misses > 0 {
+		red, white := getDefenseDicesToReroll(&result, defense, misses)
+		extraResult := DefenseRoll(red, white)
+		combineDefenseResults(&result, &extraResult)
+	}
+
 	// 7c Convert Defense Surges:
 	// The defender changes its defense surge results to the result indicated on its unit card by turning the die.
 	// If no result is indicated, the defender changes the result to a blank.
@@ -48,7 +59,7 @@ func CalculateBlocks(result DefenseResult, attack *Attack, defense *Defense) (in
 	// Then, the attacker can resolve any card abilities that modify the defense dice
 	applyPierce(&result, attack)
 
-	return 	result.Red.B + result.White.B, result
+	return result.Red.B + result.White.B, result
 }
 
 func getAttackMisses(result *AttackResult, attack *Attack) int {
@@ -56,6 +67,16 @@ func getAttackMisses(result *AttackResult, attack *Attack) int {
 
 	if !attack.config.surgesToCrits && !attack.config.surgesToHits {
 		misses += result.Red.S + result.Black.S + result.White.S
+	}
+
+	return misses
+}
+
+func getDefenseMisses(result *DefenseResult, defense *Defense) int {
+	misses := result.Red.N + result.White.N
+
+	if !defense.config.surgesToBlock {
+		misses += result.Red.S + result.White.S
 	}
 
 	return misses
@@ -69,39 +90,35 @@ func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (r
 
 	// first we will temporarily remove surges that would be converted by other keywords like criticalX
 	// But only if surges are not converted in general, other wise we do not care at this point
-	whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks := 0, 0, 0, 0, 0 ,0
+	whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks := 0, 0, 0, 0, 0, 0
 
 	if !convertsSurges {
 		whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks = saveDiceBeforeReroll(result, attack)
 	}
 
-	redToReroll := 0
-	blackToReroll := 0
-	whiteToReroll := 0
-
 	// subtract from original result. Start with red, because it has the most chance of an extra hit
 	for tot := 0; tot < count; {
 		if result.Red.N > 0 {
-			redToReroll++
+			red++
 			result.Red.N--
 		} else if result.Red.S > 0 && !convertsSurges {
-			redToReroll++
+			red++
 			result.Red.S--
 		} else if result.Black.N > 0 {
-			blackToReroll++
+			black++
 			result.Black.N--
 		} else if result.Black.S > 0 && !convertsSurges {
-			blackToReroll++
+			black++
 			result.Black.S--
 		} else if result.White.N > 0 {
-			whiteToReroll++
+			white++
 			result.White.N--
 		} else if result.White.S > 0 && !convertsSurges {
-			whiteToReroll++
+			white++
 			result.White.S--
 		}
 
-		tot = redToReroll + blackToReroll + whiteToReroll
+		tot = red + black + white
 	}
 
 	// add back the savedSurges
@@ -114,7 +131,31 @@ func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (r
 		result.Red.N += redBlanks
 	}
 
-	return redToReroll, blackToReroll, whiteToReroll
+	return red, black, white
+}
+
+func getDefenseDicesToReroll(result *DefenseResult, defense *Defense, misses int) (red int, white int) {
+	count := min(misses, defense.config.keywords.uncannyLuckX)
+
+	for tot := 0; tot < count; {
+		if result.Red.N > 0 {
+			red++
+			result.Red.N--
+		} else if result.Red.S > 0 && !defense.config.surgesToBlock {
+			red++
+			result.Red.S--
+		} else if result.White.N > 0 {
+			white++
+			result.White.N--
+		} else if result.White.S > 0 && !defense.config.surgesToBlock {
+			white++
+			result.White.S--
+		}
+
+		tot = red + white
+	}
+
+	return red, white
 }
 
 func saveDiceBeforeReroll(result *AttackResult, attack *Attack) (whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks int) {
@@ -337,13 +378,22 @@ func applyDefenseSurges(result *DefenseResult, defense *Defense) {
 func applyDodgeAndCover(result *AttackResult, attack *Attack, defense *Defense) {
 	cover := 0
 
+	// Blast: Ignore cover
 	if !attack.config.keywords.blast {
 		cover += defense.config.cover
+
+		// Low Profile: While defending, if you have light cover, improve your cover by 1
 		if cover == 1 && defense.config.keywords.lowProfile {
 			cover = 2
 		}
 
-		cover += cover+defense.config.keywords.coverX
+		// Cover X: While defending against a ranged attack, improve your cover by X
+		cover += cover + defense.config.keywords.coverX
+
+		// Sharpshooter X: While performing a ranged attack, reduce the defender’s cover by X
+		if attack.config.keywords.sharpshooterX > 0 {
+			cover -= max(attack.config.keywords.sharpshooterX, 0)
+		}
 	}
 
 	hitsToRemove := min(cover, 2)
@@ -404,6 +454,16 @@ func combineAttackResults(a *AttackResult, b *AttackResult) {
 
 	a.White.H += b.White.H
 	a.White.C += b.White.C
+	a.White.S += b.White.S
+	a.White.N += b.White.N
+}
+
+func combineDefenseResults(a *DefenseResult, b *DefenseResult) {
+	a.Red.B += b.Red.B
+	a.Red.S += b.Red.S
+	a.Red.N += b.Red.N
+
+	a.White.B += b.White.B
 	a.White.S += b.White.S
 	a.White.N += b.White.N
 }

@@ -54,6 +54,10 @@ func AddRamXToAttack(ramX int, attack *Attack) {
 	attack.config.keywords.ramX = ramX
 }
 
+func AddSharpshooterXToAttack(sharpshooterX int, attack *Attack) {
+	attack.config.keywords.sharpshooterX = sharpshooterX
+}
+
 func AddBlastToAttack(blast bool, attack *Attack) {
 	attack.config.keywords.blast = blast
 }
@@ -94,6 +98,10 @@ func AddArmorXToDefense(armorX int, defense *Defense) {
 	defense.config.keywords.armorX = armorX
 }
 
+func AddUncannyLuckXToDefense(uncannyLuckX int, defense *Defense) {
+	defense.config.keywords.uncannyLuckX = uncannyLuckX
+}
+
 func AddLowProfileToDefense(lowProfile bool, defense *Defense) {
 	defense.config.keywords.lowProfile = lowProfile
 }
@@ -123,6 +131,7 @@ func AttackFromRequest(request *http.Request) Attack {
 	impactX := paramToInt("impactX", request)
 	criticalX := paramToInt("criticalX", request)
 	ramX := paramToInt("ramX", request)
+	sharpshooterX := paramToInt("sharpshooterX", request)
 	blast := paramToBoolean("blast", request)
 	highVelocity := paramToBoolean("highVelocity", request)
 
@@ -132,6 +141,7 @@ func AttackFromRequest(request *http.Request) Attack {
 	AddImpactXToAttack(impactX, &attack)
 	AddCriticalXToAttack(criticalX, &attack)
 	AddRamXToAttack(ramX, &attack)
+	AddSharpshooterXToAttack(sharpshooterX, &attack)
 	AddBlastToAttack(blast, &attack)
 	AddHighVelocityToAttack(highVelocity, &attack)
 
@@ -140,18 +150,19 @@ func AttackFromRequest(request *http.Request) Attack {
 
 func DefenseFromRequest(request *http.Request) Defense {
 	// defense dice type (red/white)
-	d := request.URL.Query().Get("d")
+	diceColor := request.URL.Query().Get("d")
 
 	// defense surges conversion (true/false)
-	ds := paramToBoolean("ds", request)
+	surge := paramToBoolean("ds", request)
 	cover := paramToInt("cover", request)
 
-	defense := CreateDefense(d, ds, cover)
+	defense := CreateDefense(diceColor, surge, cover)
 
 	armor := paramToBoolean("armor", request)
 	dodge := paramToInt("dodge", request)
 	coverX := paramToInt("coverX", request)
 	armorX := paramToInt("armorX", request)
+	uncannyLuckX := paramToInt("uncannyLuckX", request)
 	lowProfile := paramToBoolean("lowProfile", request)
 	impervious := paramToBoolean("impervious", request)
 
@@ -159,6 +170,7 @@ func DefenseFromRequest(request *http.Request) Defense {
 	AddCoverXToDefense(coverX, &defense)
 	AddArmorToDefense(armor, &defense)
 	AddArmorXToDefense(armorX, &defense)
+	AddUncannyLuckXToDefense(uncannyLuckX, &defense)
 	AddLowProfileToDefense(lowProfile, &defense)
 	AddImperviousToDefense(impervious, &defense)
 

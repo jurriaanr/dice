@@ -37,13 +37,14 @@ type AttackConfig struct {
 }
 
 type AttackKeywords struct {
-	blast        bool
-	highVelocity bool
-	pierceX      int
-	impactX      int
-	ramX         int
-	preciseX     int
-	criticalX    int
+	blast         bool
+	highVelocity  bool
+	pierceX       int
+	impactX       int
+	ramX          int
+	preciseX      int
+	criticalX     int
+	sharpshooterX int
 }
 
 type AttackTokens struct {

@@ -98,9 +98,5 @@ func DefenseRoleResult(hits int, attack *Attack, defense *Defense) (blocks int, 
 	result = DefenseRoll(redDice, whiteDice)
 	blocks, resultAfter = CalculateBlocks(result, attack, defense)
 
-	// 7b Reroll Dice
-	// The defender can resolve any abilities that allow the defender to reroll defense dice.
-	// ...
-
 	return blocks, result, resultAfter
 }
