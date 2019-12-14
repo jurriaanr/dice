@@ -112,9 +112,9 @@ func AddImperviousToDefense(impervious bool, defense *Defense) {
 
 func AttackFromRequest(request *http.Request) Attack {
 	// attack dice
-	r := paramToInt("r", request)
-	b := paramToInt("b", request)
-	w := paramToInt("w", request)
+	r := paramToInt("r", request, 25)
+	b := paramToInt("b", request, 25)
+	w := paramToInt("w", request, 25)
 	// attack surges conversion (crits, hits, none)
 	as := request.URL.Query().Get("as")
 
@@ -125,13 +125,13 @@ func AttackFromRequest(request *http.Request) Attack {
 		as,
 	)
 
-	aim := paramToInt("aim", request)
-	preciseX := paramToInt("preciseX", request)
-	pierceX := paramToInt("pierceX", request)
-	impactX := paramToInt("impactX", request)
-	criticalX := paramToInt("criticalX", request)
-	ramX := paramToInt("ramX", request)
-	sharpshooterX := paramToInt("sharpshooterX", request)
+	aim := paramToInt("aim", request, 10)
+	preciseX := paramToInt("preciseX", request, 10)
+	pierceX := paramToInt("pierceX", request, 10)
+	impactX := paramToInt("impactX", request, 10)
+	criticalX := paramToInt("criticalX", request, 10)
+	ramX := paramToInt("ramX", request, 10)
+	sharpshooterX := paramToInt("sharpshooterX", request, 10)
 	blast := paramToBoolean("blast", request)
 	highVelocity := paramToBoolean("highVelocity", request)
 
@@ -154,15 +154,15 @@ func DefenseFromRequest(request *http.Request) Defense {
 
 	// defense surges conversion (true/false)
 	surge := paramToBoolean("ds", request)
-	cover := paramToInt("cover", request)
+	cover := paramToInt("cover", request, 10)
 
 	defense := CreateDefense(diceColor, surge, cover)
 
 	armor := paramToBoolean("armor", request)
-	dodge := paramToInt("dodge", request)
-	coverX := paramToInt("coverX", request)
-	armorX := paramToInt("armorX", request)
-	uncannyLuckX := paramToInt("uncannyLuckX", request)
+	dodge := paramToInt("dodge", request, 10)
+	coverX := paramToInt("coverX", request, 10)
+	armorX := paramToInt("armorX", request, 10)
+	uncannyLuckX := paramToInt("uncannyLuckX", request, 10)
 	lowProfile := paramToBoolean("lowProfile", request)
 	impervious := paramToBoolean("impervious", request)
 
@@ -203,6 +203,6 @@ func paramToBoolean(key string, request *http.Request) bool {
 	return stringToBoolean(request.URL.Query().Get(key))
 }
 
-func paramToInt(key string, request *http.Request) int {
-	return stringToInt(request.URL.Query().Get(key))
+func paramToInt(key string, request *http.Request, maxVal int) int {
+	return min(stringToInt(request.URL.Query().Get(key)), maxVal)
 }
