@@ -18,6 +18,7 @@ type Roll struct {
 type Result struct {
 	Successes float64
 	Rolls     *[]Roll
+	Chances   []float64
 }
 
 func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
@@ -29,6 +30,8 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 
 	// collect total number of hits
 	sum := 0
+	collect := make([]int, attack.red+attack.black+attack.white+1)
+
 	for i := 0; i < rolls; i++ {
 		// 4 Roll Attack Dice (includes step 4a, 4b, 4c, 5 and 6)
 		// The attacker rolls the dice in the attack pool
@@ -42,6 +45,7 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 
 		// increase total with number of Successes
 		sum += remainingHits
+		collect[remainingHits]++
 
 		if i < logs {
 			results[i] = Roll{
@@ -54,9 +58,16 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 		}
 	}
 
+	// calculate chances per amount of hits
+	Chances := make([]float64, attack.red+attack.black+attack.white+1)
+	for i, l := 0, attack.red+attack.black+attack.white+1; i < l; i++ {
+		Chances[i] = (float64(collect[i]) / float64(rolls)) * 100
+	}
+
 	return Result{
 		float64(sum) / float64(rolls),
 		&results,
+		Chances,
 	}
 }
 
