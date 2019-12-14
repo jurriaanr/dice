@@ -2,7 +2,6 @@ package dice
 
 import (
 	"math/rand"
-	"strings"
 )
 
 var redAttackValues = [...]string{"H", "H", "H", "H", "H", "C", "S", "N"}
@@ -64,41 +63,50 @@ func whiteAttackDice() string {
 }
 
 func AttackRoll(redDice, blackDice, whiteDice int) AttackResult {
-	redDiceValues := make([]string, redDice)
-	blackDiceValues := make([]string, blackDice)
-	whiteDiceValues := make([]string, whiteDice)
+	result := AttackResult{}
 
 	for i, rb, rbw := 0, redDice+blackDice, redDice+blackDice+whiteDice; i < rbw; i++ {
 		switch {
 		case i < redDice:
-			redDiceValues[i] = redAttackDice()
+			d := redAttackDice()
+			switch d {
+				case "H":
+					result.Red.H++
+				case "C":
+					result.Red.C++
+				case "S":
+					result.Red.S++
+				case "N":
+					result.Red.N++
+			}
 		case i < rb:
-			blackDiceValues[i-redDice] = blackAttackDice()
+			d := blackAttackDice()
+			switch d {
+			case "H":
+				result.Black.H++
+			case "C":
+				result.Black.C++
+			case "S":
+				result.Black.S++
+			case "N":
+				result.Black.N++
+			}
 		case i < rbw:
-			whiteDiceValues[i-rb] = whiteAttackDice()
+			d := whiteAttackDice()
+			switch d {
+			case "H":
+				result.White.H++
+			case "C":
+				result.White.C++
+			case "S":
+				result.White.S++
+			case "N":
+				result.White.N++
+			}
 		}
 	}
 
-	return AttackResult{
-		Red: AttackDiceResult{
-			H: strings.Count(strings.Join(redDiceValues[:], ""), "H"),
-			C: strings.Count(strings.Join(redDiceValues[:], ""), "C"),
-			S: strings.Count(strings.Join(redDiceValues[:], ""), "S"),
-			N: strings.Count(strings.Join(redDiceValues[:], ""), "N"),
-		},
-		Black: AttackDiceResult{
-			H: strings.Count(strings.Join(blackDiceValues[:], ""), "H"),
-			C: strings.Count(strings.Join(blackDiceValues[:], ""), "C"),
-			S: strings.Count(strings.Join(blackDiceValues[:], ""), "S"),
-			N: strings.Count(strings.Join(blackDiceValues[:], ""), "N"),
-		},
-		White: AttackDiceResult{
-			H: strings.Count(strings.Join(whiteDiceValues[:], ""), "H"),
-			C: strings.Count(strings.Join(whiteDiceValues[:], ""), "C"),
-			S: strings.Count(strings.Join(whiteDiceValues[:], ""), "S"),
-			N: strings.Count(strings.Join(whiteDiceValues[:], ""), "N"),
-		},
-	}
+	return result
 }
 
 func AttackRollResult(attack *Attack, defense *Defense) (hits int, result AttackResult, resultAfter AttackResult) {

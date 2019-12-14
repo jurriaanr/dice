@@ -2,7 +2,6 @@ package dice
 
 import (
 	"math/rand"
-	"strings"
 )
 
 var redDefenseValues = [...]string{"B", "B", "B", "S", "N", "N"}
@@ -54,30 +53,34 @@ func whiteDefenseDice() string {
 }
 
 func DefenseRoll(redDice, whiteDice int) DefenseResult {
-	redDiceValues := make([]string, redDice)
-	whiteDiceValues := make([]string, whiteDice)
+	result := DefenseResult{}
 
 	for i, rw := 0, redDice+whiteDice; i < rw; i++ {
 		switch {
 		case i < redDice:
-			redDiceValues[i] = redDefenseDice()
+			d := redDefenseDice()
+			switch d {
+			case "B":
+				result.Red.B++
+			case "S":
+				result.Red.S++
+			case "N":
+				result.Red.N++
+			}
 		case i < rw:
-			whiteDiceValues[i-redDice] = whiteDefenseDice()
+			d := whiteDefenseDice()
+			switch d {
+			case "B":
+				result.White.B++
+			case "S":
+				result.White.S++
+			case "N":
+				result.White.N++
+			}
 		}
 	}
 
-	return DefenseResult{
-		Red: DefenseDiceResult{
-			B: strings.Count(strings.Join(redDiceValues[:], ""), "B"),
-			S: strings.Count(strings.Join(redDiceValues[:], ""), "S"),
-			N: strings.Count(strings.Join(redDiceValues[:], ""), "N"),
-		},
-		White: DefenseDiceResult{
-			B: strings.Count(strings.Join(whiteDiceValues[:], ""), "B"),
-			S: strings.Count(strings.Join(whiteDiceValues[:], ""), "S"),
-			N: strings.Count(strings.Join(whiteDiceValues[:], ""), "N"),
-		},
-	}
+	return result
 }
 
 func DefenseRoleResult(hits int, attack *Attack, defense *Defense) (blocks int, result DefenseResult, resultAfter DefenseResult) {
