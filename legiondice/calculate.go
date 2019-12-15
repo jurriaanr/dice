@@ -69,7 +69,8 @@ func getAttackMisses(result *AttackResult, attack *Attack) int {
 	misses := result.Red.N + result.Black.N + result.White.N
 
 	if !attack.config.surgesToCrits && !attack.config.surgesToHits {
-		misses += result.Red.S + result.Black.S + result.White.S
+		surgeVal := result.Red.S + result.Black.S + result.White.S
+		misses += max(surgeVal - attack.config.tokens.surge, 0)
 	}
 
 	return misses
@@ -96,7 +97,7 @@ func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (r
 	whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks := 0, 0, 0, 0, 0, 0
 
 	if !convertsSurges {
-		whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks = saveDiceBeforeReroll(result, attack)
+		whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks = saveDiceBeforeAttackReroll(result, attack)
 	}
 
 	// subtract from original result. Start with red, because it has the most chance of an extra hit
@@ -140,6 +141,14 @@ func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (r
 func getDefenseDicesToReroll(result *DefenseResult, defense *Defense, misses int) (red int, white int) {
 	count := min(misses, defense.config.keywords.uncannyLuckX)
 
+	// first we will temporarily remove surges that would be converted by other effects like surge tokens
+	// But only if surges are not converted in general, other wise we do not care at this point
+	surgesToSave := 0
+
+	if !defense.config.surgesToBlock {
+		surgesToSave = saveDiceBeforeDefenseReroll(result, defense)
+	}
+
 	for tot := 0; tot < count; {
 		if result.Red.N > 0 {
 			red++
@@ -158,11 +167,19 @@ func getDefenseDicesToReroll(result *DefenseResult, defense *Defense, misses int
 		tot = red + white
 	}
 
+	if surgesToSave > 0 {
+		if defense.config.rollsRedDefense {
+			result.Red.S += surgesToSave
+		} else {
+			result.White.S += surgesToSave
+		}
+	}
+
 	return red, white
 }
 
-func saveDiceBeforeReroll(result *AttackResult, attack *Attack) (whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks int) {
-	numberOfSurgesToSave := attack.config.keywords.criticalX
+func saveDiceBeforeAttackReroll(result *AttackResult, attack *Attack) (whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks int) {
+	numberOfSurgesToSave := attack.config.keywords.criticalX + attack.config.tokens.surge
 	numberOfSurgesOrBlanksToSave := attack.config.keywords.ramX
 
 	whiteSurges = 0
@@ -216,12 +233,22 @@ func saveDiceBeforeReroll(result *AttackResult, attack *Attack) (whiteSurges, bl
 	return whiteSurges, blackSurges, redSurges, whiteBlanks, blackBlanks, redBlanks
 }
 
+func saveDiceBeforeDefenseReroll(result *DefenseResult, defense *Defense) int {
+	numberOfSurgesToSave := defense.config.tokens.surge
+	if defense.config.rollsRedDefense {
+		return min(numberOfSurgesToSave, result.Red.S)
+	} else {
+		return min(numberOfSurgesToSave, result.White.S)
+	}
+}
+
 // 4C Convert attack surges
 // The attacker changes its attack surge results to the result indicated on its unit card by turning the die.
 // If no result is indicated, the attacker changes the result to a blank.
 func applyAttackSurges(result *AttackResult, attack *Attack) {
 	// first we apply critical X converting surges to crits
 	applyCriticalX(result, attack)
+	applyAttackSurgeToken(result, attack)
 
 	// now handle remaining surges
 	if attack.config.surgesToHits {
@@ -252,8 +279,8 @@ func applyAttackSurges(result *AttackResult, attack *Attack) {
 func applyCriticalX(result *AttackResult, attack *Attack) {
 	for tot := attack.config.keywords.criticalX; tot > 0; {
 		if result.Red.S > 0 {
-			result.Red.C++
 			result.Red.S--
+			result.Red.C++
 			tot--
 		} else if result.Black.S > 0 {
 			result.Black.S--
@@ -262,6 +289,26 @@ func applyCriticalX(result *AttackResult, attack *Attack) {
 		} else if result.White.S > 0 {
 			result.White.S--
 			result.White.C++
+			tot--
+		} else {
+			break
+		}
+	}
+}
+
+func applyAttackSurgeToken(result *AttackResult, attack *Attack) {
+	for tot := attack.config.tokens.surge; tot > 0; {
+		if result.Red.S > 0 {
+			result.Red.S--
+			result.Red.H++
+			tot--
+		} else if result.Black.S > 0 {
+			result.Black.S--
+			result.Black.H++
+			tot--
+		} else if result.White.S > 0 {
+			result.White.S--
+			result.White.H++
 			tot--
 		} else {
 			break
@@ -365,6 +412,9 @@ func applyArmor(result *AttackResult, defense *Defense) {
 // The defender changes its defense surge results to the result indicated on its unit card by turning the die.
 // If no result is indicated, the defender changes the result to a blank.
 func applyDefenseSurges(result *DefenseResult, defense *Defense) {
+	// first convert tokens
+	applyDefenseSurgeToken(result, defense)
+
 	if defense.config.surgesToBlock {
 		result.Red.B += result.Red.S
 		result.White.B += result.White.S
@@ -375,6 +425,22 @@ func applyDefenseSurges(result *DefenseResult, defense *Defense) {
 		result.White.N += result.White.S
 		result.Red.S = 0
 		result.White.S = 0
+	}
+}
+
+func applyDefenseSurgeToken(result *DefenseResult, defense *Defense) {
+	for tot := defense.config.tokens.surge; tot > 0; {
+		if result.Red.S > 0 {
+			result.Red.S--
+			result.Red.B++
+			tot--
+		} else if result.White.S > 0 {
+			result.White.S--
+			result.White.B++
+			tot--
+		} else {
+			break
+		}
 	}
 }
 

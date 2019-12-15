@@ -47,7 +47,8 @@ type AttackKeywords struct {
 }
 
 type AttackTokens struct {
-	aim int
+	aim   int
+	surge int
 }
 
 func redAttackDice() string {
@@ -70,14 +71,14 @@ func AttackRoll(redDice, blackDice, whiteDice int) AttackResult {
 		case i < redDice:
 			d := redAttackDice()
 			switch d {
-				case "H":
-					result.Red.H++
-				case "C":
-					result.Red.C++
-				case "S":
-					result.Red.S++
-				case "N":
-					result.Red.N++
+			case "H":
+				result.Red.H++
+			case "C":
+				result.Red.C++
+			case "S":
+				result.Red.S++
+			case "N":
+				result.Red.N++
 			}
 		case i < rb:
 			d := blackAttackDice()

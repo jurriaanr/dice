@@ -43,6 +43,7 @@ type DefenseKeywords struct {
 type DefenseTokens struct {
 	dodge  int
 	shield int
+	surge  int
 }
 
 func redDefenseDice() string {

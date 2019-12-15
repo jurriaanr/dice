@@ -10,7 +10,7 @@ func CreateAttack(
 	redAttackDice,
 	blackAttackDice,
 	whiteAttackDice int,
-	surge string,
+	surgeConvertType string,
 ) Attack {
 	// setup Attack pool
 	attack := Attack{
@@ -20,7 +20,7 @@ func CreateAttack(
 	}
 
 	// the way surges are converted
-	switch strings.ToLower(surge) {
+	switch strings.ToLower(surgeConvertType) {
 	case "hits":
 		attack.config.surgesToHits = true
 	case "crits":
@@ -32,6 +32,10 @@ func CreateAttack(
 
 func AddAimToAttack(aim int, attack *Attack) {
 	attack.config.tokens.aim = aim
+}
+
+func AddSurgeToAttack(surge int, attack *Attack) {
+	attack.config.tokens.surge = surge
 }
 
 func AddPreciseXToAttack(preciseX int, attack *Attack) {
@@ -90,6 +94,10 @@ func AddShieldToDefense(shield int, defense *Defense) {
 	defense.config.tokens.shield = shield
 }
 
+func AddSurgeToDefense(surge int, defense *Defense) {
+	defense.config.tokens.surge = surge
+}
+
 func AddCoverXToDefense(coverX int, defense *Defense) {
 	defense.config.keywords.coverX = coverX
 }
@@ -120,16 +128,17 @@ func AttackFromRequest(request *http.Request) Attack {
 	b := paramToInt("b", request, 25)
 	w := paramToInt("w", request, 25)
 	// attack surges conversion (crits, hits, none)
-	as := request.URL.Query().Get("as")
+	surgeConvertType := request.URL.Query().Get("as")
 
 	attack := CreateAttack(
 		int(r),
 		int(b),
 		int(w),
-		as,
+		surgeConvertType,
 	)
 
 	aim := paramToInt("aim", request, 10)
+	surge := paramToInt("surgeA", request, 10)
 	preciseX := paramToInt("preciseX", request, 10)
 	pierceX := paramToInt("pierceX", request, 10)
 	impactX := paramToInt("impactX", request, 10)
@@ -140,6 +149,7 @@ func AttackFromRequest(request *http.Request) Attack {
 	highVelocity := paramToBoolean("highVelocity", request)
 
 	AddAimToAttack(aim, &attack)
+	AddSurgeToAttack(surge, &attack)
 	AddPreciseXToAttack(preciseX, &attack)
 	AddPierceXToAttack(pierceX, &attack)
 	AddImpactXToAttack(impactX, &attack)
@@ -157,14 +167,15 @@ func DefenseFromRequest(request *http.Request) Defense {
 	diceColor := request.URL.Query().Get("d")
 
 	// defense surges conversion (true/false)
-	surge := paramToBoolean("ds", request)
+	convertSurge := paramToBoolean("ds", request)
 	cover := paramToInt("cover", request, 10)
 
-	defense := CreateDefense(diceColor, surge, cover)
+	defense := CreateDefense(diceColor, convertSurge, cover)
 
 	armor := paramToBoolean("armor", request)
 	dodge := paramToInt("dodge", request, 10)
 	shield := paramToInt("shield", request, 10)
+	surge := paramToInt("surgeD", request, 10)
 	coverX := paramToInt("coverX", request, 10)
 	armorX := paramToInt("armorX", request, 10)
 	uncannyLuckX := paramToInt("uncannyLuckX", request, 10)
@@ -173,6 +184,7 @@ func DefenseFromRequest(request *http.Request) Defense {
 
 	AddDodgeToDefense(dodge, &defense)
 	AddShieldToDefense(shield, &defense)
+	AddSurgeToDefense(surge, &defense)
 	AddCoverXToDefense(coverX, &defense)
 	AddArmorToDefense(armor, &defense)
 	AddArmorXToDefense(armorX, &defense)
