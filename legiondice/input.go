@@ -183,6 +183,7 @@ func DefenseFromRequest(request *http.Request) Defense {
 	coverX := paramToInt("coverX", request, 10)
 	armorX := paramToInt("armorX", request, 10)
 	uncannyLuckX := paramToInt("uncannyLuckX", request, 10)
+	dangerSenseX := paramToInt("dangerSenseX", request, 10)
 	lowProfile := paramToBoolean("lowProfile", request)
 	impervious := paramToBoolean("impervious", request)
 
@@ -193,6 +194,7 @@ func DefenseFromRequest(request *http.Request) Defense {
 	AddArmorToDefense(armor, &defense)
 	AddArmorXToDefense(armorX, &defense)
 	AddUncannyLuckXToDefense(uncannyLuckX, &defense)
+	AddDangerSenseXToDefense(dangerSenseX, &defense)
 	AddLowProfileToDefense(lowProfile, &defense)
 	AddImperviousToDefense(impervious, &defense)
 
