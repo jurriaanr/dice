@@ -41,7 +41,8 @@ type DefenseKeywords struct {
 }
 
 type DefenseTokens struct {
-	dodge int
+	dodge  int
+	shield int
 }
 
 func redDefenseDice() string {
@@ -88,6 +89,7 @@ func DefenseRoleResult(hits int, attack *Attack, defense *Defense) (blocks int, 
 	whiteDice := 0
 
 	hits = addImperviousToDefense(hits, attack, defense)
+	hits = applyShieldToDefenseDice(hits, defense)
 
 	if defense.config.rollsRedDefense {
 		redDice = hits

@@ -86,6 +86,10 @@ func AddDodgeToDefense(dodge int, defense *Defense) {
 	defense.config.tokens.dodge = dodge
 }
 
+func AddShieldToDefense(shield int, defense *Defense) {
+	defense.config.tokens.shield = shield
+}
+
 func AddCoverXToDefense(coverX int, defense *Defense) {
 	defense.config.keywords.coverX = coverX
 }
@@ -160,6 +164,7 @@ func DefenseFromRequest(request *http.Request) Defense {
 
 	armor := paramToBoolean("armor", request)
 	dodge := paramToInt("dodge", request, 10)
+	shield := paramToInt("shield", request, 10)
 	coverX := paramToInt("coverX", request, 10)
 	armorX := paramToInt("armorX", request, 10)
 	uncannyLuckX := paramToInt("uncannyLuckX", request, 10)
@@ -167,6 +172,7 @@ func DefenseFromRequest(request *http.Request) Defense {
 	impervious := paramToBoolean("impervious", request)
 
 	AddDodgeToDefense(dodge, &defense)
+	AddShieldToDefense(shield, &defense)
 	AddCoverXToDefense(coverX, &defense)
 	AddArmorToDefense(armor, &defense)
 	AddArmorXToDefense(armorX, &defense)

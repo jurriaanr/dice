@@ -38,6 +38,9 @@ func CalculateHits(result AttackResult, attack *Attack, defense *Defense) (int, 
 }
 
 func CalculateBlocks(result DefenseResult, attack *Attack, defense *Defense) (int, DefenseResult) {
+	// add shield blocks
+	applyShieldToDefenseResult(&result, defense)
+
 	// 7b Reroll Dice
 	// The defender can resolve any abilities that allow the defender to reroll defense dice.
 	misses := getDefenseMisses(&result, defense)
@@ -439,6 +442,20 @@ func addImperviousToDefense(dice int, attack *Attack, defense *Defense) int {
 		dice += attack.config.keywords.pierceX
 	}
 	return dice
+}
+
+// While defending against a ranged attack,during the 'Roll Defense Dice' step the defender may flip active shield tokens
+// to add 1 block and roll 1 defense dice less for each token
+func applyShieldToDefenseDice(dice int, defense *Defense) int {
+	return max(dice - defense.config.tokens.shield, 0)
+}
+
+func applyShieldToDefenseResult(result *DefenseResult, defense *Defense) {
+	if defense.config.rollsRedDefense {
+		result.Red.B += defense.config.tokens.shield
+	} else {
+		result.White.B += defense.config.tokens.shield
+	}
 }
 
 func combineAttackResults(a *AttackResult, b *AttackResult) {

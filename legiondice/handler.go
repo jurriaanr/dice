@@ -41,7 +41,7 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 		blocks, defenseResult, defenseResultAfter := DefenseRoleResult(hits, attack, defense)
 
 		// 9 Compare Results:
-		remainingHits := hits - blocks
+		remainingHits := max(hits - blocks, 0)
 
 		// increase total with number of Successes
 		sum += remainingHits
