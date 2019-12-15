@@ -510,6 +510,11 @@ func addImperviousToDefense(dice int, attack *Attack, defense *Defense) int {
 	return dice
 }
 
+// You may choose not to remove your suppression tokens. While defending against a ranged attack, roll 1 extra defense die for each suppression token you have, adding up to X extra dice.
+func addDangerSenseXToDefense(dice int, defense *Defense) int {
+	return dice + defense.config.keywords.dangerSenseX
+}
+
 // While defending against a ranged attack,during the 'Roll Defense Dice' step the defender may flip active shield tokens
 // to add 1 block and roll 1 defense dice less for each token
 func applyShieldToDefenseDice(dice int, defense *Defense) int {

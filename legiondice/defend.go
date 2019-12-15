@@ -38,6 +38,7 @@ type DefenseKeywords struct {
 	armorX       int
 	coverX       int
 	uncannyLuckX int
+	dangerSenseX int
 }
 
 type DefenseTokens struct {
@@ -89,13 +90,14 @@ func DefenseRoleResult(hits int, attack *Attack, defense *Defense) (blocks int, 
 	redDice := 0
 	whiteDice := 0
 
-	hits = addImperviousToDefense(hits, attack, defense)
-	hits = applyShieldToDefenseDice(hits, defense)
+	dicesToRoll := addImperviousToDefense(hits, attack, defense)
+	dicesToRoll = addDangerSenseXToDefense(dicesToRoll, defense)
+	dicesToRoll = applyShieldToDefenseDice(dicesToRoll, defense)
 
 	if defense.config.rollsRedDefense {
-		redDice = hits
+		redDice = dicesToRoll
 	} else {
-		whiteDice = hits
+		whiteDice = dicesToRoll
 	}
 
 	// 7a Roll Dice

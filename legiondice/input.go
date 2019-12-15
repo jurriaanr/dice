@@ -114,6 +114,10 @@ func AddUncannyLuckXToDefense(uncannyLuckX int, defense *Defense) {
 	defense.config.keywords.uncannyLuckX = uncannyLuckX
 }
 
+func AddDangerSenseXToDefense(dangerSenseX int, defense *Defense) {
+	defense.config.keywords.dangerSenseX = dangerSenseX
+}
+
 func AddLowProfileToDefense(lowProfile bool, defense *Defense) {
 	defense.config.keywords.lowProfile = lowProfile
 }
