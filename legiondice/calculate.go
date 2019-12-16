@@ -297,21 +297,23 @@ func applyCriticalX(result *AttackResult, attack *Attack) {
 }
 
 func applyAttackSurgeToken(result *AttackResult, attack *Attack) {
-	for tot := attack.config.tokens.surge; tot > 0; {
-		if result.Red.S > 0 {
-			result.Red.S--
-			result.Red.H++
-			tot--
-		} else if result.Black.S > 0 {
-			result.Black.S--
-			result.Black.H++
-			tot--
-		} else if result.White.S > 0 {
-			result.White.S--
-			result.White.H++
-			tot--
-		} else {
-			break
+	if !attack.config.surgesToCrits {
+		for tot := attack.config.tokens.surge; tot > 0; {
+			if result.Red.S > 0 {
+				result.Red.S--
+				result.Red.H++
+				tot--
+			} else if result.Black.S > 0 {
+				result.Black.S--
+				result.Black.H++
+				tot--
+			} else if result.White.S > 0 {
+				result.White.S--
+				result.White.H++
+				tot--
+			} else {
+				break
+			}
 		}
 	}
 }
