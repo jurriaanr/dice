@@ -5,10 +5,19 @@ func CalculateHits(result AttackResult, attack *Attack, defense *Defense) (int, 
 	// The attacker can resolve any abilities that allow the attacker to reroll attack dice.
 	misses := getAttackMisses(&result, attack)
 
+	// only if we have aim tokens
 	if attack.config.tokens.aim > 0 && misses > 0 {
-		red, black, white := getAttackDicesToReroll(&result, attack, misses)
-		extraResult := AttackRoll(red, black, white)
-		combineAttackResults(&result, &extraResult)
+		aimTokensLeft := attack.config.tokens.aim
+		for aimTokensLeft > 0 && misses > 0 {
+			//fmt.Printf("AimX tokens left: %d, misses: %d\n", attack.config.tokens.aim, misses)
+			red, black, white, tokensLeft := getAttackDicesToReroll(&result, attack, misses, aimTokensLeft)
+			extraResult := AttackRoll(red, black, white)
+			combineAttackResults(&result, &extraResult)
+
+			misses = getAttackMisses(&result, attack)
+			aimTokensLeft = tokensLeft
+		}
+		//fmt.Printf("Aim tokens left: %d, misses: %d\n", attack.config.tokens.aim, misses)
 	}
 
 	// 4C Convert attack surges
@@ -70,7 +79,7 @@ func getAttackMisses(result *AttackResult, attack *Attack) int {
 
 	if !attack.config.surgesToCrits && !attack.config.surgesToHits {
 		surgeVal := result.Red.S + result.Black.S + result.White.S
-		misses += max(surgeVal - attack.config.tokens.surge, 0)
+		misses += max(surgeVal-attack.config.tokens.surge, 0)
 	}
 
 	return misses
@@ -86,9 +95,12 @@ func getDefenseMisses(result *DefenseResult, defense *Defense) int {
 	return misses
 }
 
-func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (red int, black int, white int) {
+func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int, aimTokens int) (red, black, white, aimTokensLeft int) {
 	// we can only reroll up to the number of aimtokens we have. So either all the misses, or the max allowed rerolls
-	count := min(misses, attack.config.tokens.aim*(2+attack.config.keywords.preciseX))
+	// we can spent tokens to reroll the misses
+	count := 2 + attack.config.keywords.preciseX
+	aimTokens--
+	count = min(misses, count)
 
 	convertsSurges := attack.config.surgesToHits || attack.config.surgesToCrits
 
@@ -135,7 +147,7 @@ func getAttackDicesToReroll(result *AttackResult, attack *Attack, misses int) (r
 		result.Red.N += redBlanks
 	}
 
-	return red, black, white
+	return red, black, white, aimTokens
 }
 
 func getDefenseDicesToReroll(result *DefenseResult, defense *Defense, misses int) (red int, white int) {
@@ -494,9 +506,11 @@ func applyPierce(result *DefenseResult, attack *Attack) {
 	for tot := attack.config.keywords.pierceX; tot > 0; {
 		if result.White.B > 0 {
 			result.White.B--
+			result.White.N++
 			tot--
 		} else if result.Red.B > 0 {
 			result.Red.B--
+			result.Red.N++
 			tot--
 		} else {
 			break
@@ -520,7 +534,7 @@ func addDangerSenseXToDefense(dice int, defense *Defense) int {
 // While defending against a ranged attack,during the 'Roll Defense Dice' step the defender may flip active shield tokens
 // to add 1 block and roll 1 defense dice less for each token
 func applyShieldToDefenseDice(dice int, defense *Defense) int {
-	return max(dice - defense.config.tokens.shield, 0)
+	return max(dice-defense.config.tokens.shield, 0)
 }
 
 func applyShieldToDefenseResult(result *DefenseResult, defense *Defense) {
