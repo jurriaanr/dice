@@ -19,7 +19,8 @@ type DefenseResult struct {
 }
 
 type Defense struct {
-	config DefenseConfig
+	config  DefenseConfig
+	enabled bool
 }
 
 type DefenseConfig struct {

@@ -72,12 +72,14 @@ func AddHighVelocityToAttack(highVelocity bool, attack *Attack) {
 
 func CreateDefense(defenseDice string, surges bool, cover int) Defense {
 	// setup Defense pool
-	defense := Defense{}
+	defense := Defense{ enabled: true }
 
 	if strings.ToLower(defenseDice) == "red" {
 		defense.config.rollsRedDefense = true
-	} else {
+	} else if strings.ToLower(defenseDice) == "white" {
 		defense.config.rollsWhiteDefense = true
+	} else {
+		defense.enabled = false
 	}
 
 	defense.config.surgesToBlock = surges
@@ -176,27 +178,29 @@ func DefenseFromRequest(request *http.Request) Defense {
 
 	defense := CreateDefense(diceColor, convertSurge, cover)
 
-	armor := paramToBoolean("armor", request)
-	dodge := paramToInt("dodge", request, 10)
-	shield := paramToInt("shield", request, 10)
-	surge := paramToInt("surgeD", request, 10)
-	coverX := paramToInt("coverX", request, 10)
-	armorX := paramToInt("armorX", request, 10)
-	uncannyLuckX := paramToInt("uncannyLuckX", request, 10)
-	dangerSenseX := paramToInt("dangerSenseX", request, 10)
-	lowProfile := paramToBoolean("lowProfile", request)
-	impervious := paramToBoolean("impervious", request)
+	if defense.enabled {
+		armor := paramToBoolean("armor", request)
+		dodge := paramToInt("dodge", request, 10)
+		shield := paramToInt("shield", request, 10)
+		surge := paramToInt("surgeD", request, 10)
+		coverX := paramToInt("coverX", request, 10)
+		armorX := paramToInt("armorX", request, 10)
+		uncannyLuckX := paramToInt("uncannyLuckX", request, 10)
+		dangerSenseX := paramToInt("dangerSenseX", request, 10)
+		lowProfile := paramToBoolean("lowProfile", request)
+		impervious := paramToBoolean("impervious", request)
 
-	AddDodgeToDefense(dodge, &defense)
-	AddShieldToDefense(shield, &defense)
-	AddSurgeToDefense(surge, &defense)
-	AddCoverXToDefense(coverX, &defense)
-	AddArmorToDefense(armor, &defense)
-	AddArmorXToDefense(armorX, &defense)
-	AddUncannyLuckXToDefense(uncannyLuckX, &defense)
-	AddDangerSenseXToDefense(dangerSenseX, &defense)
-	AddLowProfileToDefense(lowProfile, &defense)
-	AddImperviousToDefense(impervious, &defense)
+		AddDodgeToDefense(dodge, &defense)
+		AddShieldToDefense(shield, &defense)
+		AddSurgeToDefense(surge, &defense)
+		AddCoverXToDefense(coverX, &defense)
+		AddArmorToDefense(armor, &defense)
+		AddArmorXToDefense(armorX, &defense)
+		AddUncannyLuckXToDefense(uncannyLuckX, &defense)
+		AddDangerSenseXToDefense(dangerSenseX, &defense)
+		AddLowProfileToDefense(lowProfile, &defense)
+		AddImperviousToDefense(impervious, &defense)
+	}
 
 	return defense
 }

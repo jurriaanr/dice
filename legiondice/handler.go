@@ -37,8 +37,14 @@ func Test(attack *Attack, defense *Defense, rolls int, logs int) Result {
 		// The attacker rolls the dice in the attack pool
 		hits, attackResult, attackResultAfter := AttackRollResult(attack, defense)
 
-		// 7 Roll Defense Dice (includes 7a, 7b, 7c and 8)
-		blocks, defenseResult, defenseResultAfter := DefenseRoleResult(hits, attack, defense)
+		var blocks int
+		var defenseResult DefenseResult
+		var defenseResultAfter DefenseResult
+
+		if defense.enabled {
+			// 7 Roll Defense Dice (includes 7a, 7b, 7c and 8)
+			blocks, defenseResult, defenseResultAfter = DefenseRoleResult(hits, attack, defense)
+		}
 
 		// 9 Compare Results:
 		remainingHits := max(hits - blocks, 0)
